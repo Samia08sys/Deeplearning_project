@@ -4,6 +4,8 @@
 Projet individuel complet couvrant **3 paradigmes de deep learning** en PyTorch :
 tabular (MLP), images (CNN), séquences (RNN/LSTM/GRU/Seq2Seq).
 
+Une partie simple d'**agents communicants** est aussi ajoutée pour relier les 3 blocs avec une explication légère de type SHAP/LIME.
+
 ---
 
 ## 📁 Structure du projet
@@ -35,6 +37,10 @@ Deeplearning_project/
     ├── decoding.py
     ├── data_prep.py
     ├── train_evaluate.py
+    └── main.py
+└── part4_agents/      ← Partie IV : agents simples + interface Tkinter + explicabilité
+    ├── agents.py
+    ├── explainability.py
     └── main.py
 ```
 
@@ -83,6 +89,24 @@ python part3_rnn/main.py
 - `outputs/part3/rnn_comparison.png` — courbes RNN vs LSTM vs GRU
 - **Perplexité et score BLEU imprimés dans le terminal** (`[✓]`)
 
+### Partie IV — Agents communicants + explicabilité simple
+```bash
+python part4_agents/main.py
+```
+**Rôle :**
+- un agent pour la partie MLP
+- un agent pour la partie CNN
+- un agent pour la partie RNN
+- un coordinateur qui échange les messages entre eux
+**Interface :**
+- un champ de saisie pour poser la question
+- 3 zones de réponse affichées en parallèle
+- chaque agent répond selon sa partie
+**Explicabilité :**
+- version simple inspirée de SHAP/LIME
+- mise en avant des variables, filtres ou mots les plus influents
+- sortie textuelle facile à intégrer dans le rapport
+
 ---
 
 ## 📋 Ce qui est implémenté
@@ -92,6 +116,7 @@ python part3_rnn/main.py
 | **I** | MLP Sequential + Custom `nn.Module`, 3 stratégies d'initialisation (Gaussian/Constant/Xavier), métriques complètes (accuracy, precision, recall, F1, confusion matrix) | 30 |
 | **II** | Convolution 2D manuelle (numpy), max-pooling & avg-pooling manuels, formule des dimensions, LeNet-5, LeNet amélioré, expériences hyperparamètres, visualisation de feature maps | 35 |
 | **III** | RNN vanilla (cellule manuelle), LSTM, GRU, Seq2Seq encoder-décodeur, Greedy decoding, Beam Search decoding, gradient clipping (BPTT), Perplexité, BLEU | 35 |
+| **IV** | 3 agents simples (MLP/CNN/RNN) + communication + explicabilité textuelle inspirée de SHAP/LIME | bonus |
 
 ---
 
