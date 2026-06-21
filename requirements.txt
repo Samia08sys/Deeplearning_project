@@ -1,0 +1,13 @@
+torch
+torchvision
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+nltk
+sacrebleu
+tqdm
+requests
+kagglehub
+datasets
