@@ -80,6 +80,71 @@ def train_classifier(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Language model training
+# ─────────────────────────────────────────────────────────────────────────────
+def train_language_model(
+    model, train_loader, val_loader,
+    n_epochs=1, lr=1e-3, clip=1.0, label="language_model", pad_idx=0
+) -> dict:
+    model = model.to(DEVICE)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
+    history = {"train_loss": [], "val_loss": []}
+
+    print(f"\n{'='*60}")
+    print(f"  Training language model: {label}  |  Epochs: {n_epochs}")
+    print(f"{'='*60}")
+
+    for epoch in range(1, n_epochs + 1):
+        model.train()
+        tr_loss, tr_tokens = 0.0, 0
+
+        for X, y, lengths in train_loader:
+            X = X.to(DEVICE)
+            optimizer.zero_grad()
+
+            inp = X[:, :-1]
+            tgt = X[:, 1:]
+            logits, _ = model(inp, None)
+
+            B, T, V = logits.shape
+            loss = criterion(logits.reshape(B * T, V), tgt.reshape(-1))
+            loss.backward()
+            nn.utils.clip_grad_norm_(model.parameters(), clip)
+            optimizer.step()
+
+            n_tok = (tgt != pad_idx).sum().item()
+            tr_loss += loss.item() * n_tok
+            tr_tokens += n_tok
+
+        model.eval()
+        vl_loss, vl_tokens = 0.0, 0
+        with torch.no_grad():
+            for X, y, lengths in val_loader:
+                X = X.to(DEVICE)
+                inp = X[:, :-1]
+                tgt = X[:, 1:]
+                logits, _ = model(inp, None)
+
+                B, T, V = logits.shape
+                loss = criterion(logits.reshape(B * T, V), tgt.reshape(-1))
+                n_tok = (tgt != pad_idx).sum().item()
+                vl_loss += loss.item() * n_tok
+                vl_tokens += n_tok
+
+        history["train_loss"].append(tr_loss / max(tr_tokens, 1))
+        history["val_loss"].append(vl_loss / max(vl_tokens, 1))
+
+        print(
+            f"  Epoch {epoch:2d}/{n_epochs}  "
+            f"train_loss={history['train_loss'][-1]:.4f}  "
+            f"val_loss={history['val_loss'][-1]:.4f}"
+        )
+
+    return history
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Perplexity evaluation
 # ─────────────────────────────────────────────────────────────────────────────
 def compute_perplexity(model, loader, pad_idx=0) -> float:
@@ -92,15 +157,12 @@ def compute_perplexity(model, loader, pad_idx=0) -> float:
     total_loss, total_tokens = 0.0, 0
 
     with torch.no_grad():
-        hidden = None
         for X, y, lengths in loader:
             X, y = X.to(DEVICE), y.to(DEVICE)
             # For LM: input=X[:, :-1], target=X[:, 1:]
             inp = X[:, :-1]
             tgt = X[:, 1:]
-            logits, hidden = model(inp, hidden)
-            # Detach hidden to avoid BPTT across batches
-            hidden = tuple(h.detach() for h in hidden)
+            logits, _ = model(inp, None)
             B, T, V = logits.shape
             loss = criterion(logits.reshape(B * T, V), tgt.reshape(-1))
             n_tok = (tgt != pad_idx).sum().item()

@@ -16,7 +16,8 @@ from models         import VanillaRNN, LSTMClassifier, GRUClassifier, LSTMLangua
 from seq2seq        import Encoder, Decoder, Seq2Seq
 from decoding       import greedy_decode, beam_search_decode
 from train_evaluate import (
-    train_classifier, compute_perplexity, compute_bleu, plot_comparison, DEVICE
+    train_classifier, train_language_model, compute_perplexity, compute_bleu,
+    plot_comparison, DEVICE
 )
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs", "part3")
@@ -76,10 +77,10 @@ def main():
     print("\n─── SECTION C: Perplexity (Language Model) ───")
     lm = LSTMLanguageModel(V, EMBED_DIM, HIDDEN, n_layers=N_LAYERS)
     # quick 1-epoch train for demo   
-    from train_evaluate import train_classifier
-    lm_hist = train_classifier(lm if False else lm,  # keep unused to avoid import issues
-                               train_loader, test_loader,
-                               n_epochs=1, lr=LR, label="LM-1epoch")
+    lm_hist = train_language_model(
+        lm, train_loader, test_loader,
+        n_epochs=1, lr=LR, label="LM-1epoch", pad_idx=PAD_IDX
+    )
     ppl = compute_perplexity(lm, test_loader, pad_idx=PAD_IDX)
     # ── CONFIRMED: Perplexity printed ─────────────────────────────────────────
     print(f"\n[✓] PERPLEXITY (LSTM Language Model): {ppl:.2f}")
